@@ -1,78 +1,85 @@
+// Add event listener to form submission
 document.getElementById('expForm').addEventListener('submit', addTransaction);
-// initial array of transactions, reading from localStorage
+
+// Read initial array of transactions from localStorage or set to empty array if not found
 const transactions = JSON.parse(localStorage.getItem('transactions')) || [];
 
+// Add a new transaction
 function addTransaction(e) {
-    e.preventDefault();
+  e.preventDefault();
 
-    // get type, name, and amount
-    let type = document.getElementById('type').value;
-    let name = document.getElementById('name').value;
-    let amount = document.getElementById('amount').value;
+  // Get type, name, and amount
+  const type = document.getElementById('type').value;
+  const name = document.getElementById('name').value;
+  const amount = document.getElementById('amount').value;
 
-    if (type != 'chooseOne'
-        && name.length > 0
-        && amount > 0) {
-        const transaction = {
-            type,
-            name,
-            amount,
-            id: transactions.length > 0 ? transactions[transactions.length - 1].id + 1 : 1,
-        }
+  // Validate input
+  if (type !== 'chooseOne' && name.length > 0 && amount > 0) {
+    const transaction = {
+      type,
+      name,
+      amount,
+      id: transactions.length > 0 ? transactions[transactions.length - 1].id + 1 : 1,
+    };
 
-        transactions.push(transaction);
-        // localStorage 
-        localStorage.setItem('transactions', JSON.stringify(transactions));
-    }
+    // Add transaction to array and store in localStorage
+    transactions.push(transaction);
+    localStorage.setItem('transactions', JSON.stringify(transactions));
+  }
 
-    document.getElementById('expForm').reset();
-    showTransactions();
-    updateBalance();
+  // Reset form, update transactions table, and balance
+  document.getElementById('expForm').reset();
+  showTransactions();
+  updateBalance();
 }
 
-const showTransactions = () => {
+// Display all transactions in table
+function showTransactions() {
+  const transactionTable = document.getElementById('transactionTable');
 
-    const transactionTable = document.getElementById('transactionTable');
+  // Clear table content
+  transactionTable.innerHTML = '';
 
-    transactionTable.innerHTML = '';
-
-    for (let i = 0; i < transactions.length; i++) {
-        transactionTable.innerHTML += `
-            <tr>
-                <td>${transactions[i].type}</td>
-                <td>${transactions[i].name}</td>
-                <td>$${transactions[i].amount}</td>
-                <td><a class="deleteButton" onclick="deleteTransaction(${transactions[i].id})">
-                    Delete</td>
-            </tr>
-        `;
-    }
+  // Add transactions to table
+  for (const transaction of transactions) {
+    transactionTable.innerHTML += `
+      <tr>
+        <td>${transaction.type}</td>
+        <td>${transaction.name}</td>
+        <td>$${transaction.amount}</td>
+        <td>
+          <a class="deleteButton" onclick="deleteTransaction(${transaction.id})">Delete</a>
+        </td>
+      </tr>
+    `;
+  }
 }
 
+// Delete a transaction by ID
+function deleteTransaction(id) {
+  const index = transactions.findIndex((transaction) => transaction.id === id);
 
-const deleteTransaction = (id) => {
-    for (let i = 0; i < transactions.length; i++) {
-        if (transactions[i].id == id) {
-            transactions.splice(i, 1);
-        }
-    }
+  if (index !== -1) {
+    transactions.splice(index, 1);
 
-    // localStorage
+    // Store updated transactions in localStorage and update table and balance
     localStorage.setItem('transactions', JSON.stringify(transactions));
     showTransactions();
     updateBalance();
+  }
 }
 
-const updateBalance = () => {
-    let balance = 0;
+// Update balance based on transactions
+function updateBalance() {
+  let balance = 0;
 
-    transactions.forEach((transaction) => {
-        if (transaction.type === "income") {
-            balance += Number(transaction.amount);
-        } else if (transaction.type === "expense") {
-            balance -= transaction.amount;
-        }
-    });
+  transactions.forEach((transaction) => {
+    if (transaction.type === 'income') {
+      balance += Number(transaction.amount);
+    } else if (transaction.type === 'expense') {
+      balance -= Number(transaction.amount);
+    }
+  });
 
-    document.querySelector(".balance").textContent = balance;
+  document.querySelector('.balance').textContent = balance;
 }
